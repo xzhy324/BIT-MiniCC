@@ -3,7 +3,7 @@
   <phases>
     <phase>
       <phase skip="true" type="java" path="" name="preprocess" />
-      <phase skip="false" type="java" path="xyz.roundginger.scanner.MyScanner" name="scan" />
+      <phase skip="false" type="java" path="roundginger.minicc.scanner.MyScanner" name="scan" />
       <phase skip="true" type="java" path="" name="parse" />
       <phase skip="true" type="java" path="" name="semantic" />
       <phase skip="true" type="java" path="" name="icgen" />
