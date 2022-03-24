@@ -3,13 +3,13 @@
   <phases>
     <phase>
       <phase skip="true" type="java" path="" name="preprocess" />
-      <phase skip="false" type="java" path="" name="scan" />
-      <phase skip="false" type="java" path="" name="parse" />
-      <phase skip="false" type="java" path="" name="semantic" />
-      <phase skip="false" type="java" path="" name="icgen" />
+      <phase skip="false" type="java" path="xyz.roundginger.scanner.MyScanner" name="scan" />
+      <phase skip="true" type="java" path="" name="parse" />
+      <phase skip="true" type="java" path="" name="semantic" />
+      <phase skip="true" type="java" path="" name="icgen" />
       <phase skip="true" type="java" path="" name="optimize" />
-      <phase skip="false" type="java" path="" name="ncgen" target="mips" ra="ls" />
-      <phase skip="false" type="mips" path="" name="simulate" />
+      <phase skip="true" type="java" path="" name="ncgen" target="mips" ra="ls" />
+      <phase skip="true" type="mips" path="" name="simulate" />
     </phase>
   </phases>
 </config>
