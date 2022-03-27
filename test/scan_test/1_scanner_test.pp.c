@@ -74,7 +74,7 @@ int main()
 	{
 		int num1;
 	}test;
-	test test1 ;
+	test  test1 ;//error
 	test *test2 ;
 	static int sti ;
 	const int ci ;

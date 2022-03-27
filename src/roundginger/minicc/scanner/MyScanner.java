@@ -4,11 +4,9 @@ import bit.minisys.minicc.scanner.IMiniCCScanner;
 
 import bit.minisys.minicc.MiniCCCfg;
 import bit.minisys.minicc.internal.util.MiniCCUtil;
-import bit.minisys.minicc.scanner.IMiniCCScanner;
-import java.io.File;
-import java.io.FileDescriptor;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
+
+import java.io.*;
+
 import org.antlr.v4.gui.TestRig;
 
 
@@ -28,19 +26,25 @@ public class MyScanner implements IMiniCCScanner {
 
         File fp = new File(oFile);
         fp.createNewFile();
+        //将输出流改为写文件，以便将token属性字流保存下来
         FileOutputStream fileOutputStream = new FileOutputStream(fp);
         PrintStream printStream = new PrintStream(fileOutputStream);
         System.setOut(printStream);
 
-        //TODO 在这个位置使用antlr，并弄清楚为什么需要修改输出流
-        String[] antlr_settings = new String[]{"bit.minisys.minicc.parser.internal.antlr.C", "compilationUnit", "-tokens", iFile};
+        //@param1: grammerName
+        //@param2: startRuleName (公理)
+        //@param that is not started with '-' : inputFileName
+        //@param "-xxxx": extra params (gui/tree,tokens, etc.)
+        String[] antlr_settings = new String[]{"roundginger.minicc.scanner.antlr.C", "compilationUnit", "-tokens","-gui", iFile};
+        //特别注意，使用antlr生成的java代码，需要手动在每个生成类的前面指定我们自己调用的包：即roundginger.minicc.scanner.antlr
         TestRig testRig = new TestRig(antlr_settings);
         testRig.process();
 
         fileOutputStream.close();
         printStream.close();
-        System.setOut(new PrintStream(new FileOutputStream(FileDescriptor.out)));
-        System.out.println("2. RR's LexAnalyse finished!");
+        //将输出流改为stdout
+        System.setOut(new PrintStream(new FileOutputStream(FileDescriptor.out)));//FileDescriptor.out就是标准输出流
+        System.out.println("2. RG's LexAnalyse finished!");
         return oFile;
     }
 }
