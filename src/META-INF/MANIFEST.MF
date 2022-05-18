@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+Main-Class: bit.minisys.minicc.BITMiniCC
+Class-Path: jdom.jar jackson-databind-2.10.2.jar jython.jar BITMiniCC_20
+ 200404_obf.jar dom4j-1.6.1.jar jackson-annotations-2.10.2.jar antlr-4.8
+ -complete.jar jackson-core-2.10.2.jar Mars4_5.jar Rars.jar jaxen-1.1-be
+ ta-6.jar
+

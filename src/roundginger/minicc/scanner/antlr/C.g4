@@ -27,54 +27,68 @@
 /** C 2011 grammar built from the C11 Spec */
 grammar C;
 
-
 primaryExpression
-    :   Identifier
-    |   Constant
-    |   StringLiteral+
+    :   tokenId//Identifier
+    |   tokenConstant//Constant
+    |   tokenStringLiteral//StringLiteral+
     |   '(' expression ')'
     |   genericSelection
     |   '__extension__'? '(' compoundStatement ')' // Blocks (GCC extension)
     |   '__builtin_va_arg' '(' unaryExpression ',' typeName ')'
     |   '__builtin_offsetof' '(' typeName ',' unaryExpression ')'
     ;
+tokenId
+	: Identifier
+	;
+tokenConstant
+	: Constant
+	;
+tokenStringLiteral
+	: StringLiteral+
+	;
 
 genericSelection
     :   '_Generic' '(' assignmentExpression ',' genericAssocList ')'
     ;
 
 genericAssocList
-    :   genericAssociation (',' genericAssociation)*
+    :   genericAssociation
+    |   genericAssocList ',' genericAssociation
     ;
 
 genericAssociation
-    :   (typeName | 'default') ':' assignmentExpression
+    :   typeName ':' assignmentExpression
+    |   'default' ':' assignmentExpression
     ;
 
 postfixExpression
-    :
-    (   primaryExpression
-    |   '__extension__'? '(' typeName ')' '{' initializerList ','? '}'
-    )
-    ('[' expression ']'
-    | '(' argumentExpressionList? ')'
-    | ('.' | '->') Identifier
-    | ('++' | '--')
-    )*
+    :   primaryExpression                                   #postfixExpression_pass
+    |   postfixExpression '[' expression ']'                #postfixExpression_arrayaccess
+    |   postfixExpression '(' argumentExpressionList? ')'   #postfixExpression_funcall
+    |   postfixExpression '.' Identifier                    #postfixExpression_member
+    |   postfixExpression '->' Identifier                   #postfixExpression_point
+    |   postfixExpression '++'                              #postfixExpression_
+    |   postfixExpression '--'                              #postfixExpression_
+    |   '(' typeName ')' '{' initializerList '}'            #postfixExpression_pass
+    |   '(' typeName ')' '{' initializerList ',' '}'        #postfixExpression_pass
+    |   '__extension__' '(' typeName ')' '{' initializerList '}'    #postfixExpression_pass
+    |   '__extension__' '(' typeName ')' '{' initializerList ',' '}'    #postfixExpression_pass
     ;
 
 argumentExpressionList
-    :   assignmentExpression (',' assignmentExpression)*
+    :   assignmentExpression
+    |   argumentExpressionList ',' assignmentExpression
     ;
 
 unaryExpression
-    :
-    ('++' |  '--' |  'sizeof')*
-    (postfixExpression
-    |   unaryOperator castExpression
-    |   ('sizeof' | '_Alignof') '(' typeName ')'
-    |   '&&' Identifier // GCC extension address of label
-    )
+    :   postfixExpression       #unaryExpression_pass
+    |   '++' unaryExpression    #unaryExpression_
+    |   '--' unaryExpression    #unaryExpression_
+    |   unaryOperator castExpression    #unaryExpression_
+    |   'sizeof' unaryExpression    #unaryExpression_pass
+    |   'sizeof' '(' typeName ')'   #unaryExpression_pass
+    |   '_Alignof' '(' typeName ')' #unaryExpression_pass
+    |   '&&' Identifier    #unaryExpression_pass
     ;
 
 unaryOperator
@@ -82,49 +96,67 @@ unaryOperator
     ;
 
 castExpression
-    :   '__extension__'? '(' typeName ')' castExpression
-    |   unaryExpression
-    |   DigitSequence // for
+    :   unaryExpression         #castExpression_pass
+    |   '(' typeName ')' castExpression     #castExpression_
+    |   '__extension__' '(' typeName ')' castExpression #castExpression_
     ;
 
 multiplicativeExpression
-    :   castExpression (('*'|'/'|'%') castExpression)*
+    :   castExpression          #multiplicativeExpression_pass
+    |   multiplicativeExpression '*' castExpression #multiplicativeExpression_
+    |   multiplicativeExpression '/' castExpression #multiplicativeExpression_
+    |   multiplicativeExpression '%' castExpression #multiplicativeExpression_
     ;
 
 additiveExpression
-    :   multiplicativeExpression (('+'|'-') multiplicativeExpression)*
+    :   multiplicativeExpression    #additiveExpression_pass
+    |   additiveExpression '+' multiplicativeExpression #additiveExpression_
+    |   additiveExpression '-' multiplicativeExpression #additiveExpression_
     ;
 
 shiftExpression
-    :   additiveExpression (('<<'|'>>') additiveExpression)*
+    :   additiveExpression  #shiftExpression_pass
+    |   shiftExpression '<<' additiveExpression #shiftExpression_
+    |   shiftExpression '>>' additiveExpression #shiftExpression_
     ;
 
 relationalExpression
-    :   shiftExpression (('<'|'>'|'<='|'>=') shiftExpression)*
+    :   shiftExpression     #relationalExpression_pass
+    |   relationalExpression '<' shiftExpression    #relationalExpression_
+    |   relationalExpression '>' shiftExpression    #relationalExpression_
+    |   relationalExpression '<=' shiftExpression   #relationalExpression_
+    |   relationalExpression '>=' shiftExpression   #relationalExpression_
     ;
 
 equalityExpression
-    :   relationalExpression (('=='| '!=') relationalExpression)*
+    :   relationalExpression    #equalityExpression_pass
+    |   equalityExpression '==' relationalExpression    #equalityExpression_
+    |   equalityExpression '!=' relationalExpression    #equalityExpression_
     ;
 
 andExpression
-    :   equalityExpression ( '&' equalityExpression)*
+    :   equalityExpression  #andExpression_pass
+    |   andExpression '&' equalityExpression    #andExpression_
     ;
 
 exclusiveOrExpression
-    :   andExpression ('^' andExpression)*
+    :   andExpression   #exclusiveOrExpression_pass
+    |   exclusiveOrExpression '^' andExpression #exclusiveOrExpression_
     ;
 
 inclusiveOrExpression
-    :   exclusiveOrExpression ('|' exclusiveOrExpression)*
+    :   exclusiveOrExpression   #inclusiveOrExpression_pass
+    |   inclusiveOrExpression '|' exclusiveOrExpression #inclusiveOrExpression_
     ;
 
 logicalAndExpression
-    :   inclusiveOrExpression ('&&' inclusiveOrExpression)*
+    :   inclusiveOrExpression   #logicalAndExpression_pass
+    |   logicalAndExpression '&&' inclusiveOrExpression #logicalAndExpression_
     ;
 
 logicalOrExpression
-    :   logicalAndExpression ( '||' logicalAndExpression)*
+    :   logicalAndExpression    #logicalOrExpression_pass
+    |   logicalOrExpression '||' logicalAndExpression   #logicalOrExpression_
     ;
 
 conditionalExpression
@@ -132,9 +164,8 @@ conditionalExpression
     ;
 
 assignmentExpression
-    :   conditionalExpression
-    |   unaryExpression assignmentOperator assignmentExpression
-    |   DigitSequence // for
+    :   conditionalExpression   #assignmentExpression_pass
+    |   unaryExpression assignmentOperator assignmentExpression #assignmentExpression_
     ;
 
 assignmentOperator
@@ -142,7 +173,8 @@ assignmentOperator
     ;
 
 expression
-    :   assignmentExpression (',' assignmentExpression)*
+    :   assignmentExpression    #expression_
+    |   expression ',' assignmentExpression #expression_pass
     ;
 
 constantExpression
@@ -171,11 +203,13 @@ declarationSpecifier
     ;
 
 initDeclaratorList
-    :   initDeclarator (',' initDeclarator)*
+    :   initDeclarator
+    |   initDeclaratorList ',' initDeclarator
     ;
 
 initDeclarator
-    :   declarator ('=' initializer)?
+    :   declarator
+    |   declarator '=' initializer
     ;
 
 storageClassSpecifier
@@ -188,27 +222,15 @@ storageClassSpecifier
     ;
 
 typeSpecifier
-    :   ('void'
-    |   'char'
-    |   'short'
-    |   'int'
-    |   'long'
-    |   'float'
-    |   'double'
-    |   'signed'
-    |   'unsigned'
-    |   '_Bool'
-    |   '_Complex'
-    |   '__m128'
-    |   '__m128d'
-    |   '__m128i')
-    |   '__extension__' '(' ('__m128' | '__m128d' | '__m128i') ')'
-    |   atomicTypeSpecifier
-    |   structOrUnionSpecifier
-    |   enumSpecifier
-    |   typedefName
-    |   '__typeof__' '(' constantExpression ')' // GCC extension
-    |   typeSpecifier pointer
+    :   'void'     #typeSpecifier_
+    |   'char'      #typeSpecifier_
+    |   'short'     #typeSpecifier_
+    |   'int'       #typeSpecifier_
+    |   'long'      #typeSpecifier_
+    |   'float'     #typeSpecifier_
+    |   'double'    #typeSpecifier_
+    |   'signed'    #typeSpecifier_
+    |   'unsigned'  #typeSpecifier_
     ;
 
 structOrUnionSpecifier
@@ -222,7 +244,8 @@ structOrUnion
     ;
 
 structDeclarationList
-    :   structDeclaration+
+    :   structDeclaration
+    |   structDeclarationList structDeclaration
     ;
 
 structDeclaration
@@ -231,11 +254,13 @@ structDeclaration
     ;
 
 specifierQualifierList
-    :   (typeSpecifier| typeQualifier) specifierQualifierList?
+    :   typeSpecifier specifierQualifierList?
+    |   typeQualifier specifierQualifierList?
     ;
 
 structDeclaratorList
-    :   structDeclarator (',' structDeclarator)*
+    :   structDeclarator
+    |   structDeclaratorList ',' structDeclarator
     ;
 
 structDeclarator
@@ -244,16 +269,19 @@ structDeclarator
     ;
 
 enumSpecifier
-    :   'enum' Identifier? '{' enumeratorList ','? '}'
+    :   'enum' Identifier? '{' enumeratorList '}'
+    |   'enum' Identifier? '{' enumeratorList ',' '}'
     |   'enum' Identifier
     ;
 
 enumeratorList
-    :   enumerator (',' enumerator)*
+    :   enumerator
+    |   enumeratorList ',' enumerator
     ;
 
 enumerator
-    :   enumerationConstant ('=' constantExpression)?
+    :   enumerationConstant
+    |   enumerationConstant '=' constantExpression
     ;
 
 enumerationConstant
@@ -281,7 +309,8 @@ functionSpecifier
     ;
 
 alignmentSpecifier
-    :   '_Alignas' '(' (typeName | constantExpression) ')'
+    :   '_Alignas' '(' typeName ')'
+    |   '_Alignas' '(' constantExpression ')'
     ;
 
 declarator
@@ -289,16 +318,14 @@ declarator
     ;
 
 directDeclarator
-    :   Identifier
-    |   '(' declarator ')'
-    |   directDeclarator '[' typeQualifierList? assignmentExpression? ']'
-    |   directDeclarator '[' 'static' typeQualifierList? assignmentExpression ']'
-    |   directDeclarator '[' typeQualifierList 'static' assignmentExpression ']'
-    |   directDeclarator '[' typeQualifierList? '*' ']'
-    |   directDeclarator '(' parameterTypeList ')'
-    |   directDeclarator '(' identifierList? ')'
-    |   Identifier ':' DigitSequence  // bit field
-    |   '(' typeSpecifier? pointer directDeclarator ')' // function pointer like: (__cdecl *f)
+    :   Identifier          #directDeclarator_pass
+    |   '(' declarator ')'  #directDeclarator_pass
+    |   directDeclarator '[' typeQualifierList? assignmentExpression? ']'   #directDeclarator_array
+    |   directDeclarator '[' 'static' typeQualifierList? assignmentExpression ']'   #directDeclarator_array
+    |   directDeclarator '[' typeQualifierList 'static' assignmentExpression ']'    #directDeclarator_array
+    |   directDeclarator '[' typeQualifierList? '*' ']'     #directDeclarator_array
+    |   directDeclarator '(' parameterTypeList ')'          #directDeclarator_func
+    |   directDeclarator '(' identifierList? ')'            #directDeclarator_func
     ;
 
 gccDeclaratorExtension
@@ -311,12 +338,14 @@ gccAttributeSpecifier
     ;
 
 gccAttributeList
-    :   gccAttribute? (',' gccAttribute?)*
+    :   gccAttribute (',' gccAttribute)*
+    |   // empty
     ;
 
 gccAttribute
     :   ~(',' | '(' | ')') // relaxed def for "identifier or reserved word"
         ('(' argumentExpressionList? ')')?
+    |   // empty
     ;
 
 nestedParenthesesBlock
@@ -326,19 +355,25 @@ nestedParenthesesBlock
     ;
 
 pointer
-    :  (('*'|'^') typeQualifierList?)+ // ^ - Blocks language extension
+    :   '*' typeQualifierList?
+    |   '*' typeQualifierList? pointer
+    |   '^' typeQualifierList? // Blocks language extension
+    |   '^' typeQualifierList? pointer // Blocks language extension
     ;
 
 typeQualifierList
-    :   typeQualifier+
+    :   typeQualifier
+    |   typeQualifierList typeQualifier
     ;
 
 parameterTypeList
-    :   parameterList (',' '...')?
+    :   parameterList
+    |   parameterList ',' '...'
     ;
 
 parameterList
-    :   parameterDeclaration (',' parameterDeclaration)*
+    :   parameterDeclaration
+    |   parameterList ',' parameterDeclaration
     ;
 
 parameterDeclaration
@@ -347,7 +382,8 @@ parameterDeclaration
     ;
 
 identifierList
-    :   Identifier (',' Identifier)*
+    :   Identifier
+    |   identifierList ',' Identifier
     ;
 
 typeName
@@ -373,17 +409,16 @@ directAbstractDeclarator
     |   directAbstractDeclarator '(' parameterTypeList? ')' gccDeclaratorExtension*
     ;
 
-typedefName
-    :   Identifier
-    ;
 
 initializer
     :   assignmentExpression
-    |   '{' initializerList ','? '}'
+    |   '{' initializerList '}'
+    |   '{' initializerList ',' '}'
     ;
 
 initializerList
-    :   designation? initializer (',' designation? initializer)*
+    :   designation? initializer
+    |   initializerList ',' designation? initializer
     ;
 
 designation
@@ -391,7 +426,8 @@ designation
     ;
 
 designatorList
-    :   designator+
+    :   designator
+    |   designatorList designator
     ;
 
 designator
@@ -424,12 +460,13 @@ compoundStatement
     ;
 
 blockItemList
-    :   blockItem+
+    :   blockItem
+    |   blockItemList blockItem
     ;
 
 blockItem
-    :   statement
-    |   declaration
+    :   declaration
+    |   statement
     ;
 
 expressionStatement
@@ -437,38 +474,23 @@ expressionStatement
     ;
 
 selectionStatement
-    :   'if' '(' expression ')' statement ('else' statement)?
-    |   'switch' '(' expression ')' statement
+    :   'if' '(' expression ')' statement ('else' statement)?   #selectionStatement_if
+    |   'switch' '(' expression ')' statement                   #selectionStatement_switch
     ;
 
 iterationStatement
-    :   While '(' expression ')' statement
-    |   Do statement While '(' expression ')' ';'
-    |   For '(' forCondition ')' statement
-    ;
-
-//    |   'for' '(' expression? ';' expression?  ';' forUpdate? ')' statement
-//    |   For '(' declaration  expression? ';' expression? ')' statement
-
-forCondition
-	:   (forDeclaration | expression?) ';' forExpression? ';' forExpression?
-	;
-
-forDeclaration
-    :   declarationSpecifiers initDeclaratorList?
-    ;
-
-forExpression
-    :   assignmentExpression (',' assignmentExpression)*
+    :   'while' '(' expression ')' statement                    #iterationStatement_while
+    |   'do' statement 'while' '(' expression ')' ';'           #iterationStatement_dowhile
+    |   'for' '(' expression? ';' expression? ';' expression? ')' statement     #iterationStatement_for
+    |   'for' '(' declaration expression? ';' expression? ')' statement         #iterationStatement_forDeclared
     ;
 
 jumpStatement
-    :   ('goto' Identifier
-    |   ('continue'| 'break')
-    |   'return' expression?
-    |   'goto' unaryExpression // GCC extension
-    )
-    ';'
+    :   'goto' Identifier ';'           #jumpStatement_goto
+    |   'continue' ';'                  #jumpStatement_continue
+    |   'break' ';'                     #jumpStatement_break
+    |   'return' expression? ';'        #jumpStatement_return
+    |   'goto' unaryExpression ';'      #jumpStatement_        // GCC extension
     ;
 
 compilationUnit
@@ -476,7 +498,8 @@ compilationUnit
     ;
 
 translationUnit
-    :   externalDeclaration+
+    :   externalDeclaration
+    |   translationUnit externalDeclaration
     ;
 
 externalDeclaration
@@ -490,8 +513,11 @@ functionDefinition
     ;
 
 declarationList
-    :   declaration+
+    :   declaration
+    |   declarationList declaration
     ;
+
+functionCall: tokenId '(' argumentExpressionList? ')'	#functionCall_	;
 
 Auto : 'auto';
 Break : 'break';
@@ -721,7 +747,8 @@ DecimalFloatingConstant
 
 fragment
 HexadecimalFloatingConstant
-    :   HexadecimalPrefix (HexadecimalFractionalConstant | HexadecimalDigitSequence) BinaryExponentPart FloatingSuffix?
+    :   HexadecimalPrefix HexadecimalFractionalConstant BinaryExponentPart FloatingSuffix?
+    |   HexadecimalPrefix HexadecimalDigitSequence BinaryExponentPart FloatingSuffix?
     ;
 
 fragment
@@ -732,14 +759,16 @@ FractionalConstant
 
 fragment
 ExponentPart
-    :   [eE] Sign? DigitSequence
+    :   'e' Sign? DigitSequence
+    |   'E' Sign? DigitSequence
     ;
 
 fragment
 Sign
-    :   [+-]
+    :   '+' | '-'
     ;
 
+fragment
 DigitSequence
     :   Digit+
     ;
@@ -752,7 +781,8 @@ HexadecimalFractionalConstant
 
 fragment
 BinaryExponentPart
-    :   [pP] Sign? DigitSequence
+    :   'p' Sign? DigitSequence
+    |   'P' Sign? DigitSequence
     ;
 
 fragment
@@ -762,7 +792,7 @@ HexadecimalDigitSequence
 
 fragment
 FloatingSuffix
-    :   [flFL]
+    :   'f' | 'l' | 'F' | 'L'
     ;
 
 fragment
@@ -796,7 +826,9 @@ SimpleEscapeSequence
     ;
 fragment
 OctalEscapeSequence
-    :   '\\' OctalDigit OctalDigit? OctalDigit?
+    :   '\\' OctalDigit
+    |   '\\' OctalDigit OctalDigit
+    |   '\\' OctalDigit OctalDigit OctalDigit
     ;
 fragment
 HexadecimalEscapeSequence
@@ -825,12 +857,7 @@ SChar
     ;
 
 ComplexDefine
-    :   '#' Whitespace? 'define'  ~[#\r\n]*
-        -> skip
-    ;
-
-IncludeDirective
-    :   '#' Whitespace? 'include' Whitespace? (('"' ~[\r\n]* '"') | ('<' ~[\r\n]* '>' )) Whitespace? Newline
+    :   '#' Whitespace? 'define'  ~[#]*
         -> skip
     ;
 

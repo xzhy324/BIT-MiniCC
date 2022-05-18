@@ -1,5 +1,5 @@
-// Generated from .\src\roundginger\minicc\scanner\antlr\C.g4 by ANTLR 4.8
-package roundginger.minicc.parser.myAntlr;
+// Generated from C:/projects/BIT-MiniCC/src/roundginger/minicc/scanner/antlr\C.g4 by ANTLR 4.9.2
+package roundginger.minicc.scanner.antlr;
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
 /**
