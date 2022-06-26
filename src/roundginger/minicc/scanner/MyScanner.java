@@ -22,7 +22,7 @@ public class MyScanner implements IMiniCCScanner {
      */
     @Override
     public String run(String iFile) throws Exception {
-        System.out.println("Lex Scanning...");
+        System.out.println("In LexScanning...");
         String oFile = MiniCCUtil.removeAllExt(iFile) + MiniCCCfg.MINICC_SCANNER_OUTPUT_EXT;
 
         File fp = new File(oFile);
@@ -36,7 +36,7 @@ public class MyScanner implements IMiniCCScanner {
         //@param2: startRuleName (公理)
         //@param that is not started with '-' : inputFileName
         //@param "-xxxx": extra params (gui/tree,tokens, etc.)
-        String[] antlr_settings = new String[]{"roundginger.minicc.scanner.antlr.C", "compilationUnit", "-tokens", iFile};
+        String[] antlr_settings = new String[]{"roundginger.minicc.parser.myAntlr.myC", "compilationUnit", "-tokens", iFile};
         //特别注意，使用antlr生成的java代码，需要手动在每个生成类的前面指定我们自己调用的包：即roundginger.minicc.scanner.antlr
         TestRig testRig = new TestRig(antlr_settings);
         testRig.process();

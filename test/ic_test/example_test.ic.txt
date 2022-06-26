@@ -1,0 +1,24 @@
+func &main() i32{
+var %a i32
+var %b i32
+var %c i32
+dassign %4(constval i32 0)
+dassign %a(regread i32 %4)
+dassign %5(constval i32 1)
+dassign %b(regread i32 %5)
+dassign %6(constval i32 2)
+dassign %c(regread i32 %6)
+dassign %7(
+	add i32(dread i32 %a,dread i32 %b))
+dassign %8(regread i32 %7)
+dassign %9(constval i32 3)
+dassign %10(
+	add i32(dread i32 %c,regread i32 %9))
+dassign %11(regread i32 %10)
+dassign %12(
+	add i32(regread i32 %8,regread i32 %11))
+dassign %13(regread i32 %12)
+dassign %c(regread i32 %13)
+dassign %14(constval i32 0)
+return (regread i32 %14)}
+

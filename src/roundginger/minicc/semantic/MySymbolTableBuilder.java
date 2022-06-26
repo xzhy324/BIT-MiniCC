@@ -250,11 +250,12 @@ public class MySymbolTableBuilder implements ASTVisitor{
 
     @Override
     public void visit(ASTInitList initList) throws Exception {
-        //InitList 包含 变量名（declarator） 以及 表达式 （exprs）
-        visit(initList.declarator);
+        //InitList 包含 变量名（declarator） 以及 表达式 （exprs），先处理后续的表达式
         for(ASTExpression expr : initList.exprs){
             visit(expr);
         }
+        visit(initList.declarator);
+
     }
 
     @Override

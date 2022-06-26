@@ -1,0 +1,6 @@
+(proc, , ,f)
+(ret, , ,1)
+(endp, , ,f)
+(proc, , ,main)
+(ret, , ,0)
+(endp, , ,main)
